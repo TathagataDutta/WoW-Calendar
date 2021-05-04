@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="D:\Python\Mongo Connection\wow_calendar"
+VIRTUAL_ENV="D:\Python\WoW-Calendar\wow_calendar"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
