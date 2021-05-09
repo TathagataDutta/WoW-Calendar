@@ -56,6 +56,7 @@ dt_str = str(year) + "-" + str(month) + "-" + str(day) + "T" + str(hour) + ":" +
 # dt = datetime.datetime.strptime("2017-10-13T10:53:53.000Z", "%Y-%m-%dT%H:%M:%S.000Z")
 # dt = datetime.datetime.utcnow()
 dt = datetime.datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.000Z")
+# duration = 
 raid_info_colc.insert_one({"user_id": curr_user, "toon_name": toon_name, "raid_name": raid_name, 
 							"guild_or_discord_name": guild_or_discord_name, "dt": dt})
 
