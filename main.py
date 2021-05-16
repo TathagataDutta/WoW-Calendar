@@ -1,95 +1,130 @@
 from typing import Optional
 
 from fastapi import FastAPI, Request
+from pydantic import BaseModel
 import uvicorn
 import connection
 from bson import ObjectId
-from schematics.models import Model
-from fastapi.templating import Jinja2Templates
-from schematics.types import StringType
+from datetime import datetime, timedelta
+import pandas as pd
 
-class User(Model):
-    _id = ObjectId()
-    user_id = StringType(required=True)
-    user_pw = StringType(required=True)
 
-# An instance of class User
-newuser = User()
+class User(BaseModel):
+    _id: ObjectId
+    user_id: str
+    user_pw: str
 
-# funtion to create and assign values to the instanse of class User created
-def create_user(username, password):
-    newuser._id = ObjectId()
-    newuser.user_id = username
-    newuser.user_pw = password
-    return dict(newuser)
-
-def user_exists(username):
-    user_exist = True
-    if connection.db.user_info.find({'user_id': username}).count() == 0:
-        user_exist = False
-    return user_exist
-
-def check_login_creds(username, password):
-    # if not user_exists(username):
-    if user_exists(username):
-        active_user = connection.db.user_info.find({'user_id': username}) # , 'user_pw': password})
-
-        # convert to dict with string
-        for actuser in active_user:
-            actuser = dict(actuser)
-            actuser['_id'] = str(actuser['_id'])
-            return actuser
-
+class Raid(BaseModel):
+    _id: ObjectId()
+    user_id: str
+    char_name: str
+    raid_name: str
+    guild_or_discord_name: str
+    start_date_and_time: datetime
+    # has to be positive, (is in seconds)
+    approx_duration: timedelta
 
 
 app = FastAPI()
-# templates = Jinja2Templates(directory="templates/")
 
+# USER SIGN UP
+@app.post("/user_signup/")
+async def user_signup(user: User):
+    # convert to a dict
+    d = dict(user)
+    user_id = d['user_id']
+    user_pw = d['user_pw']
 
-@app.get("/")
-def index():
-    return {"message": "Hello World"}
-
-
-# Signup endpoint with the POST method
-@app.post("/signup/{username}/{password}")
-def signup(username: str, password: str):
-    user_exists = False
-    data = create_user(username, password)
-
-
-    # Checks if an username exists from the collection of users
-    if connection.db.user_info.find({'user_id': data['user_id']}).count() > 0:
-        user_exists = True
-        print("User Exists")
+    if connection.db.user_info.count_documents({'user_id': user_id}, limit = 1) != 0:
+        print("User already exists. Try again.")
         return {"message": "User Exists"}
-    # If the email doesn't exist, create the user
-    elif user_exists == False:
-        connection.db.user_info.insert_one(data)
-        return {"message":"User Created", "user_id": data['user_id'], "user_pw": data['user_pw']}
-
-
-
-# Login endpoint
-@app.get("/login/{username}/{password}")
-def login(username, password):
-    def log_user_in(creds):
-        if creds['user_id'] == username and creds['user_pw'] == password:
-            return {"message": creds['user_id'] + ' successfully logged in'}
-        else:
-            return {"message": "Invalid credentials!!"}
-    # Read user_id from database to validate if user exists and checks if password matches
-    logger = check_login_creds(username, password)
-    print(logger)
-    if bool(logger) != True:
-        if logger == None:
-            logger = "Invalid user_id"
-            return {"message": logger}
     else:
-        status = log_user_in(logger)
-        return {"Info": status}
+        connection.db.user_info.insert_one({"user_id": user_id, "user_pw": user_pw})
+        return {"message": "User Created", "user_id": d['user_id'], "user_pw": d['user_pw']}
+
+# USER LOG IN
+@app.get("/user_login/{user_id}/{user_pw}")
+async def user_login(user_id: str, user_pw: str):
+    # if user_id exists
+    if connection.db.user_info.count_documents({'user_id': user_id}, limit = 1) != 0:
+        # check if password is correct
+        if connection.db.user_info.count_documents({'user_id': user_id, 'user_pw': user_pw}, limit = 1) != 0:
+            print("Successfully logged in!")
+            return {"message": user_id + " successfully logged in."}
+        # if password incorrect
+        else:
+            return {"message": "Invalid credentials."}
+        
+    # if user_id does not exist
+    else:
+        print("Incorrect ID or Password or User doesn't exist. Try again.")
+        return {"message": "user_id does not exist."}
 
 
+# RAID DETAILS ENTRY
+@app.post("/raid_signup/")
+async def raid_signup(raid: Raid):
+    # convert to a dict
+    d = dict(raid)
+
+    # if no errors, can remove these later
+    user_id = d['user_id']
+    char_name = d['char_name']
+    raid_name = d['raid_name']
+    guild_or_discord_name = d['guild_or_discord_name']
+    # type casting maybe required for next 3
+    # start_date_and_time = d['start_date_and_time']
+    # or this format
+    start_date_and_time = datetime(2020, 5, 16, 20, 30, 0, 0)
+    # has to be in seconds
+    approx_duration = d['approx_duration']
+    # print(f'Type of td: {type(approx_duration)}')
+    # print(f'td: {approx_duration}')
+    approx_end = start_date_and_time + approx_duration
+
+    # return {"new time": approx_end}
+
+    connection.db.raid_info.insert_one({
+        "user_id": user_id, 
+        "char_name": char_name, 
+        "raid_name": raid_name, 
+        "guild_or_discord_name": guild_or_discord_name, 
+        "start_date_and_time": start_date_and_time, 
+        "approx_duration": str(approx_duration),
+        "approx_end": approx_end
+        })
+
+    return {"message": "Raid info successfully added."}
+
+
+# RAID DETAILS FETCH
+@app.get("/fetch_raids/{user_id}")
+async def fetch_raids(user_id: str):
+    pass
+    # how to know if the correct user is logged in
+
+    # 2nd argument means which fields to not fetch
+    cursor = connection.db.raid_info.find({"user_id": user_id}, {"_id": 0, "user_id": 0})
+    list_cur = list(cursor)
+    df = pd.DataFrame(list_cur)
+
+    # olny recent dates (from past 7 days to any future date)
+    curr_date = datetime.now() - timedelta(days=7)
+    # return df
+    return df[(df['start_date_and_time'] > curr_date)]
+
+
+
+## FUTURE WORK ##
+# RAID DOCUMENT/ENTRY DELETE i.e. delete full row/document
+
+# RAID DOCUMENT/ENTRY UPDATE i.e. update/change 1 or more fields in a document/row
+
+# RAID DOCUMENT/ENTRY CLEANUP i.e. remove past records
+
+# USER DOCUMENT/ENTRY DELETE i.e. delete user
+
+# USER DOCUMENT/ENTRY UPDATE i.e. change password
 
 
 
