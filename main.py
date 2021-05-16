@@ -23,24 +23,27 @@ def create_user(username, password):
     newuser.user_pw = password
     return dict(newuser)
 
-# def user_exists(username):
-#     user_exist = True
-#     if connection.db.user.info.find({'user_id': username}).count() == 0:
-#         user_exist = False
-#     return user_exist
+def user_exists(username):
+    user_exist = True
+    if connection.db.user_info.find({'user_id': username}).count() == 0:
+        user_exist = False
+    return user_exist
 
-# def check_login_creds(username, password):
-#     if not user_exists(username):
-#         activeuser = connection.db.users.find({'user_id': username})
-#         for actuser in activeuser:
-#             actuser = dict(actuser)
-#             actuser['_id'] = str(actuser['_id'])    
-#             return actuser
+def check_login_creds(username, password):
+    # if not user_exists(username):
+    if user_exists(username):
+        active_user = connection.db.user_info.find({'user_id': username}) # , 'user_pw': password})
+
+        # convert to dict with string
+        for actuser in active_user:
+            actuser = dict(actuser)
+            actuser['_id'] = str(actuser['_id'])
+            return actuser
 
 
 
 app = FastAPI()
-templates = Jinja2Templates(directory="templates/")
+# templates = Jinja2Templates(directory="templates/")
 
 
 @app.get("/")
@@ -49,28 +52,42 @@ def index():
 
 
 # Signup endpoint with the POST method
-@app.post("/signup/{email}/{username}/{password}")
-def signup(email, username: str, password: str):
+@app.post("/signup/{username}/{password}")
+def signup(username: str, password: str):
     user_exists = False
-    data = create_user(email, username, password)
+    data = create_user(username, password)
 
-    # Covert data to dict so it can be easily inserted to MongoDB
-    dict(data)
 
-    # Checks if an email exists from the collection of users
-    if connection.db.users.find(
-        {'email': data['email']}
-        ).count() > 0:
+    # Checks if an username exists from the collection of users
+    if connection.db.user_info.find({'user_id': data['user_id']}).count() > 0:
         user_exists = True
-        print("USer Exists")
-        return {"message":"User Exists"}
+        print("User Exists")
+        return {"message": "User Exists"}
     # If the email doesn't exist, create the user
     elif user_exists == False:
-        connection.db.users.insert_one(data)
-        return {"message":"User Created","email": data['email'], "name": data['name'], "pass": data['password']}
+        connection.db.user_info.insert_one(data)
+        return {"message":"User Created", "user_id": data['user_id'], "user_pw": data['user_pw']}
 
 
 
+# Login endpoint
+@app.get("/login/{username}/{password}")
+def login(username, password):
+    def log_user_in(creds):
+        if creds['user_id'] == username and creds['user_pw'] == password:
+            return {"message": creds['user_id'] + ' successfully logged in'}
+        else:
+            return {"message": "Invalid credentials!!"}
+    # Read user_id from database to validate if user exists and checks if password matches
+    logger = check_login_creds(username, password)
+    print(logger)
+    if bool(logger) != True:
+        if logger == None:
+            logger = "Invalid user_id"
+            return {"message": logger}
+    else:
+        status = log_user_in(logger)
+        return {"Info": status}
 
 
 
@@ -78,4 +95,4 @@ def signup(email, username: str, password: str):
 
 
 if __name__ == '__main__':
-    uvicorn.run(app=app, host='127.0.0.1', port=8080, reload=True)
+    uvicorn.run("main:app", host='127.0.0.1', port=8080, workers=2, reload=True)
