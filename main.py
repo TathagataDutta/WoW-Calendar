@@ -39,6 +39,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# DEFAULT PAGE
+@app.get("/")
+async def default():
+    return {"message": "HomePage"}
+
+
+
+
 # USER SIGN UP
 @app.post("/user_signup/")
 async def user_signup(user: User):

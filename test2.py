@@ -28,7 +28,7 @@ data = datetime.now()
 
 # x = datetime.now() - datetime.now()
 # print(type(x))
-# print(x)
+# print(x) 
 
 print(data)
 str_data = str(data)
