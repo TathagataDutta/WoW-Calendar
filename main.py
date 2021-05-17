@@ -7,6 +7,7 @@ import connection
 from bson import ObjectId
 from datetime import datetime, timedelta
 import pandas as pd
+import json
 
 
 class User(BaseModel):
@@ -27,6 +28,8 @@ class Raid(BaseModel):
 
 app = FastAPI()
 
+
+
 # USER SIGN UP
 @app.post("/user_signup/")
 async def user_signup(user: User):
@@ -36,16 +39,40 @@ async def user_signup(user: User):
     user_pw = d['user_pw']
 
     if connection.db.user_info.count_documents({'user_id': user_id}, limit = 1) != 0:
-        print("User already exists. Try again.")
+        # print("User already exists. Try again.")
         return {"message": "User Exists"}
     else:
         connection.db.user_info.insert_one({"user_id": user_id, "user_pw": user_pw})
         return {"message": "User Created", "user_id": d['user_id'], "user_pw": d['user_pw']}
+        # print(dict(connection.db.user_info.find_one({"user_id": user_id}, {"_id": 0})))
+        # return json.dumps(dict(connection.db.user_info.find_one({"user_id": user_id})))
+        # return {"a": "aa"}
+
+# # USER LOG IN
+# @app.get("/user_login/{user_id}/{user_pw}")
+# async def user_login(user_id: str, user_pw: str):
+#     # if user_id exists
+#     if connection.db.user_info.count_documents({'user_id': user_id}, limit = 1) != 0:
+#         # check if password is correct
+#         if connection.db.user_info.count_documents({'user_id': user_id, 'user_pw': user_pw}, limit = 1) != 0:
+#             print("Successfully logged in!")
+#             return {"message": user_id + " successfully logged in."}
+#         # if password incorrect
+#         else:
+#             return {"message": "Invalid credentials."}
+        
+#     # if user_id does not exist
+#     else:
+#         print("Incorrect ID or Password or User doesn't exist. Try again.")
+#         return {"message": "user_id does not exist."}
 
 # USER LOG IN
-@app.get("/user_login/{user_id}/{user_pw}")
-async def user_login(user_id: str, user_pw: str):
+@app.post("/user_login/")
+async def user_login(user: User):
     # if user_id exists
+    d = dict(user)
+    user_id = d['user_id']
+    user_pw = d['user_pw']
     if connection.db.user_info.count_documents({'user_id': user_id}, limit = 1) != 0:
         # check if password is correct
         if connection.db.user_info.count_documents({'user_id': user_id, 'user_pw': user_pw}, limit = 1) != 0:
@@ -59,6 +86,7 @@ async def user_login(user_id: str, user_pw: str):
     else:
         print("Incorrect ID or Password or User doesn't exist. Try again.")
         return {"message": "user_id does not exist."}
+
 
 
 # RAID DETAILS ENTRY
