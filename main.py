@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 import connection
@@ -28,7 +29,15 @@ class Raid(BaseModel):
 
 app = FastAPI()
 
+origins = ["*"]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # USER SIGN UP
 @app.post("/user_signup/")
@@ -76,16 +85,17 @@ async def user_login(user: User):
     if connection.db.user_info.count_documents({'user_id': user_id}, limit = 1) != 0:
         # check if password is correct
         if connection.db.user_info.count_documents({'user_id': user_id, 'user_pw': user_pw}, limit = 1) != 0:
-            print("Successfully logged in!")
-            return {"message": user_id + " successfully logged in."}
+            # print("Successfully logged in!")
+            # return {"message": user_id + " successfully logged in."}
+            return {"status": "success", "message": user_id + " successfully logged in."}
         # if password incorrect
         else:
-            return {"message": "Invalid credentials."}
+            return {"status": "failed", "message": "Invalid credentials."}
         
     # if user_id does not exist
     else:
         print("Incorrect ID or Password or User doesn't exist. Try again.")
-        return {"message": "user_id does not exist."}
+        return {"status": "failed", "message": "user_id does not exist."}
 
 
 
