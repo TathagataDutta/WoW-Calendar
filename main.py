@@ -6,6 +6,7 @@ from pydantic import BaseModel
 import uvicorn
 import connection
 from bson import ObjectId
+from bson.json_util import loads, dumps
 from datetime import datetime, timedelta
 import pandas as pd
 import json
@@ -61,7 +62,12 @@ async def user_signup(user: User):
         return {"message": "User Exists"}
     else:
         connection.db.user_info.insert_one({"user_id": user_id, "user_pw": user_pw})
-        return {"message": "User Created", "user_id": d['user_id'], "user_pw": d['user_pw']}
+        bson_data = connection.db.user_info.find_one({'user_id': user_id})
+        json_data = dumps(bson_data)
+        return {"status": "success", "data": json_data}
+
+        # return {"message": "User Created", "user_id": d['user_id'], "user_pw": d['user_pw']}
+
         # print(dict(connection.db.user_info.find_one({"user_id": user_id}, {"_id": 0})))
         # return json.dumps(dict(connection.db.user_info.find_one({"user_id": user_id})))
         # return {"a": "aa"}
@@ -96,7 +102,10 @@ async def user_login(user: User):
         if connection.db.user_info.count_documents({'user_id': user_id, 'user_pw': user_pw}, limit = 1) != 0:
             # print("Successfully logged in!")
             # return {"message": user_id + " successfully logged in."}
-            return {"status": "success", "message": user_id + " successfully logged in."}
+            # return {"status": "success", "message": user_id + " successfully logged in."}
+            bson_data = connection.db.user_info.find_one({'user_id': user_id})
+            json_data = dumps(bson_data)
+            return {"status": "success", "data": json_data}
         # if password incorrect
         else:
             return {"status": "failed", "message": "Invalid credentials."}
@@ -174,7 +183,5 @@ async def fetch_raids(user_id: str):
 # USER DOCUMENT/ENTRY UPDATE i.e. change password
 
 
-
-
-# if __name__ == '__main__':
-#     uvicorn.run("main:app", host='127.0.0.1', port=8080, workers=2, reload=True)
+if __name__ == '__main__':
+    uvicorn.run("main:app", host='127.0.0.1', port=8080, workers=2, reload=True)
