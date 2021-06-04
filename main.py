@@ -66,7 +66,7 @@ async def user_signup(user: User):
         json_data = dumps(bson_data)
         return {"status": "success", "data": json_data}
 
-        # return {"message": "User Created", "user_id": d['user_id'], "user_pw": d['user_pw']}
+        return {"message": "User Created", "user_id": d['user_id'], "user_pw": d['user_pw']}
 
         # print(dict(connection.db.user_info.find_one({"user_id": user_id}, {"_id": 0})))
         # return json.dumps(dict(connection.db.user_info.find_one({"user_id": user_id})))
