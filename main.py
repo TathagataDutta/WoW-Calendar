@@ -162,12 +162,13 @@ async def fetch_raids(user_id: str):
     # 2nd argument means which fields to not fetch
     cursor = connection.db.raid_info.find({"user_id": user_id}, {"_id": 0, "user_id": 0})
     list_cur = list(cursor)
-    df = pd.DataFrame(list_cur)
+    return list_cur
+    # df = pd.DataFrame(list_cur)
 
-    # olny recent dates (from past 7 days to any future date)
-    curr_date = datetime.now() - timedelta(days=7)
-    # return df
-    return df[(df['start_date_and_time'] > curr_date)]
+    # # olny recent dates (from past 7 days to any future date)
+    # curr_date = datetime.now() - timedelta(days=7)
+    # # return df
+    # return df[(df['start_date_and_time'] > curr_date)]
 
 
 
