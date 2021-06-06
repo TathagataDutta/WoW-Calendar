@@ -129,9 +129,9 @@ async def raid_signup(raid: Raid):
     raid_name = d['raid_name']
     guild_or_discord_name = d['guild_or_discord_name']
     # type casting maybe required for next 3
-    # start_date_and_time = d['start_date_and_time']
+    start_date_and_time = d['start_date_and_time']
     # or this format
-    start_date_and_time = datetime(2020, 5, 16, 20, 30, 0, 0)
+    # start_date_and_time = datetime(2020, 5, 16, 20, 30, 0, 0)
     # has to be in seconds
     approx_duration = d['approx_duration']
     # print(f'Type of td: {type(approx_duration)}')
