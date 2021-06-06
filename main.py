@@ -160,9 +160,15 @@ async def fetch_raids(user_id: str):
     # how to know if the correct user is logged in
 
     # 2nd argument means which fields to not fetch
-    cursor = connection.db.raid_info.find({"user_id": user_id}, {"_id": 0, "user_id": 0})
+    # cursor = connection.db.raid_info.find({"user_id": user_id}, {"_id": 0, "user_id": 0})
+    cursor = connection.db.raid_info.find({"user_id": user_id}, {"user_id": 0})
     list_cur = list(cursor)
+
+    for d in list_cur:
+        d['_id'] = str(d['_id'])
+
     return list_cur
+    # return {'a': '1'}
     # df = pd.DataFrame(list_cur)
 
     # # olny recent dates (from past 7 days to any future date)
@@ -174,6 +180,11 @@ async def fetch_raids(user_id: str):
 
 ## FUTURE WORK ##
 # RAID DOCUMENT/ENTRY DELETE i.e. delete full row/document
+@app.delete("/detele_raid_record/{id_str}")
+async def delete_raid_record(id_str: str):
+    connection.db.raid_info.remove({"_id": ObjectId(id_str)})
+
+
 
 # RAID DOCUMENT/ENTRY UPDATE i.e. update/change 1 or more fields in a document/row
 
