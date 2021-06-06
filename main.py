@@ -166,6 +166,23 @@ async def fetch_raids(user_id: str):
 
     for d in list_cur:
         d['_id'] = str(d['_id'])
+        d['highlight'] = False
+        # print(d['start_date_and_time'])
+        # print(type(d['start_date_and_time']))
+
+
+    for i in range(len(list_cur)):
+        sd1 = list_cur[i]['start_date_and_time']
+        ed1 = list_cur[i]['approx_end']
+        for j in range(i + 1, len(list_cur)):
+            sd2 = list_cur[j]['start_date_and_time']
+            ed2 = list_cur[j]['approx_end']
+            if(sd2 > ed1 or ed2 < sd1):
+                pass
+            else:
+                list_cur[i]['highlight'] = list_cur[j]['highlight'] = True
+            
+            
 
     return list_cur
     # return {'a': '1'}
@@ -177,15 +194,17 @@ async def fetch_raids(user_id: str):
     # return df[(df['start_date_and_time'] > curr_date)]
 
 
+# RAID DOCUMENT/ENTRY DELETE i.e. delete full row/document
+@app.delete("/delete_raid_record/{id_str}")
+async def delete_raid_record(id_str: str):
+
+    try:
+        connection.db.raid_info.remove({"_id": ObjectId(id_str)})
+        return True
+    except:
+        return False
 
 ## FUTURE WORK ##
-# RAID DOCUMENT/ENTRY DELETE i.e. delete full row/document
-@app.delete("/detele_raid_record/{id_str}")
-async def delete_raid_record(id_str: str):
-    connection.db.raid_info.remove({"_id": ObjectId(id_str)})
-
-
-
 # RAID DOCUMENT/ENTRY UPDATE i.e. update/change 1 or more fields in a document/row
 
 # RAID DOCUMENT/ENTRY CLEANUP i.e. remove past records
