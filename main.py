@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import FastAPI, Request
+# from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
@@ -26,6 +27,19 @@ class Raid(BaseModel):
     start_date_and_time: datetime
     # has to be positive, (is in seconds)
     approx_duration: timedelta
+
+
+
+# app = FastAPI(middlewares=[
+#     Middleware(
+#         CORSMiddleware,
+#         allow_origins=["*"],
+#         allow_credentials=True,
+#         allow_methods=["*"],
+#         allow_headers=["*"]
+#     )
+# ])
+
 
 
 app = FastAPI()
