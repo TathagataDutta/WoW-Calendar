@@ -126,7 +126,7 @@ async def user_login(user: User):
         
     # if user_id does not exist
     else:
-        print("Incorrect ID or Password or User doesn't exist. Try again.")
+        # print("Incorrect ID or Password or User doesn't exist. Try again.")
         return {"status": "failed", "message": "user_id does not exist."}
 
 
