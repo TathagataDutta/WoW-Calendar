@@ -211,7 +211,6 @@ async def fetch_raids(user_id: str):
 # RAID DOCUMENT/ENTRY DELETE i.e. delete full row/document
 @app.delete("/delete_raid_record/{id_str}")
 async def delete_raid_record(id_str: str):
-
     try:
         connection.db.raid_info.remove({"_id": ObjectId(id_str)})
         return True
@@ -220,6 +219,46 @@ async def delete_raid_record(id_str: str):
 
 ## FUTURE WORK ##
 # RAID DOCUMENT/ENTRY UPDATE i.e. update/change 1 or more fields in a document/row
+@app.put("/edit_raid/{id_str}")
+async def edit_raid(raid: Raid, id_str: str):
+    try:
+        # convert to a dict
+        d = dict(raid)
+
+        # if no errors, can remove these later
+        user_id = d['user_id']
+        char_name = d['char_name']
+        raid_name = d['raid_name']
+        guild_or_discord_name = d['guild_or_discord_name']
+        # type casting maybe required for next 3
+        start_date_and_time = d['start_date_and_time']
+        # or this format
+        # start_date_and_time = datetime(2020, 5, 16, 20, 30, 0, 0)
+        # has to be in seconds
+        approx_duration = d['approx_duration']
+        # print(f'Type of td: {type(approx_duration)}')
+        # print(f'td: {approx_duration}')
+        approx_end = start_date_and_time + approx_duration
+
+        # return {"new time": approx_end}
+
+        connection.db.raid_info.update(
+            {'_id': ObjectId(id_str)},
+            {'$set': 
+                {
+                "user_id": user_id, 
+                "char_name": char_name, 
+                "raid_name": raid_name, 
+                "guild_or_discord_name": guild_or_discord_name, 
+                "start_date_and_time": start_date_and_time, 
+                "approx_duration": str(approx_duration),
+                "approx_end": approx_end
+                }
+            })
+
+        return True
+    except:
+        return False
 
 # RAID DOCUMENT/ENTRY CLEANUP i.e. remove past records
 
